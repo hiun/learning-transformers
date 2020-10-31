@@ -1,5 +1,5 @@
 # forked-transformers
-This repository contains fork of Transformer model from https://github.com/huggingface/transformers. Unlike original soruce code, which is framework, this repository is runnable stand-alone for language modeling task.
+This repository contains fork of Transformer model from https://github.com/huggingface/transformers. Unlike original soruce code, which is library, this repository is runnable stand-alone for language modeling task.
 
 The source code on such open source library are great, however it is difficult to read all code for running model at a glance. For example, preprocessing data, define train-eval loop, integrating model in to the loop, these tasks are essential to write machine learning programs, but is it not always easy to looking source code from large open soruce project.
 
