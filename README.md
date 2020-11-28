@@ -10,7 +10,7 @@ This repository partly uses source code from the following sources:
 
 - Preprocessing, Train-Eval loop (except model): https://pytorch.org/tutorials/beginner/transformer_tutorial.html
 
-- Transformer model: [https://github.com/huggingface/transformers/blob/master/src/transformers/modeling_bert.py](https://github.com/huggingface/transformers/blob/089cc1015ee73a2256b8bf3f89cd3abc3fb67d80/src/transformers/modeling_bert.py)
+- Transformer model: https://github.com/huggingface/transformers/blob/a7d46a060930242cd1de7ead8821f6eeebb0cd06/src/transformers/models/bert/modeling_bert.py
 
 
 ## informal description of transformers model
@@ -22,7 +22,7 @@ The Transformer model is one of the most popular representation generators of Ne
 
 So what actually Transformers do? What modules comprise Transformers? What are their implications? This is a natural question of mine as a beginner.
 
-### What Transformers do?
+## What Transformers do? (What Models do?)
 Because the Transformer model is a special case of the deep learning model. Let's look at what the Deep Learning model generally does. The Deep Learning model can be viewed as [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAG; a graph structure that has no connection to ancestry node).
 
 <center>
@@ -51,7 +51,7 @@ In Supervised Deep Learning cases, shaping abstract representation is the role o
 More specifically in the training model, when the model outputs inference result, that is compared against the label, and the difference is backpropagated through the model, this enforces (thus trains) model parameters to generate more task-oriented representation. (Note that the task can be multiple, in the case of multi-task learning. Or task can be much more general, in the case of few-shot learning.)
      
 
-### Modules of Transformers and their Implications
+## Modules of Transformers and their Implications
 
 Previously, we revisit the single significant property of the machine learning model that good models have good inductive bias performance to achieve good generalization performance.
 Deep learning is Neural Network methods of learning, focusing on learning thus able to deriving task-oriented representation from data.
@@ -61,25 +61,25 @@ High-level features are determined by a learning algorithm, especially backpropa
  
 I think all of the above parts have meaning to build good machine learning algorithms and systems. Let's look at how the above concepts reflect in the Deep Learning model (the DAG) of Transformers Encoder.
 
-#### Model Architecture
+### Model Architecture
 
 ![arch](./assets/arch.png)
 The above figure shows the Transformer model and its mapping between Python classes.
 We only look at the Transformer encoder, because the encoder and decoder share core functionality DAGs. 
 
-##### Input Embedding Layer
+### Input Embedding Layer
 The role of the input embedding layer is to create a meaningful (task-oriented) representation of sentences - embeddings - from natural language. In this example, we receive word ids and create a 768 dimension vector.
 The 768 dimension vector - the embeddings is a low-level representation of sentences, it is shaped by a mixture of the literal representation of text w and weight defined by backpropagation for objectives of the task.
 The embedding layer concatenates embedding from other data, such as token type and positional information.
 To add regularization for embedding, it applies layer normalization and Dropout to reduce training time and improve generalization respectively.
 This is implemented in `BertEmbedding` Python Class.
 
-##### Model Scaffolding
+### Model Scaffolding
 Multiple layers of transformation are required to make a high-level representation.
 The `BertEncoder` class stacks multiple self-attention layers of a transformer to implement this.
 It initializes the transformer layer to input matrix one another.
 
-##### Inside of Single Model
+### Inside of Single Model
 The single transformer model is comprised of the attention part, intermediate processing part, and the output processing part.
 The first module `BertAttention` applies self-attention and by call `BertSelfAttention`and normalizes its output with `BertSelfOutput` module.
 The second module `BertIntermediate` layer is for increasing model capacity, by adding one sparser layer (`hidden_size` 768 dim to `intermediate_size` 3072 dim).
@@ -87,7 +87,7 @@ The last layer `BertOutput` is for bottleneck layer (`intermediate_size` 3072 di
 
 `BertLayer` connects above three layers, to be stackable.
 
-##### Self-Attention
+### Self-Attention
 
 <center>
 <img src="./assets/seq2seq.png" width="250" />
@@ -123,19 +123,19 @@ Note that the adjustment is gradually refined across stacked layers.
 
 
 Note that the multi-head means just splitting input representation by number of heads,
-To allows the model to attend different subspaces of representation without averaging it ([ref](https://lilianweng.github.io/lil-log/2018/06/24/attention-attention.html#multi-head-self-attention) and [original paper]).
+To allows the model to attend different subspaces of representation without averaging it ([ref](https://lilianweng.github.io/lil-log/2018/06/24/attention-attention.html#multi-head-self-attention) and [original paper](https://arxiv.org/abs/1706.03762)).
 
 So Multi-head property can be viewed as regularizing to attend different subspace of representation, by preventing averaging overall attention score.
 
 In summary, self-attention is just matrix multiplication that essentially does adjust the importance of each word in a sentence to make a better representation.
 
-##### Additional Model Capacity and Regularization
+### Additional Model Capacity and Regularization
 
 After retrieving self-attention applied representation from the previous step,
 The `BertSelfOutput` module provides additional linear transformation with layer normalization and Dropout.
 I think the role of this component is to provide additional model capacity and add Regularization.
 
-#### Our Task: Language Modeling
+## Our Task: Language Modeling
 We use our model as language modeling.
 Language modeling is an NLP task that predicts the next word from a given sequence of words.
 The Transformer approach to language modeling is text classification, where calculate conditional probabilities of the next word in given previous words.
@@ -150,7 +150,7 @@ It calculates loss after inference is done.
 
  
 
-#### Data Preprocessing
+### Data Preprocessing
 First of all, it splits data with N number of the batch for each train, eval loop.
 
 
@@ -163,9 +163,9 @@ Each row in the tensor contains a batch size number of words (20 in our case).
 As example shows, a single sentence is represented by multiple batches with the same column number.
 
 
-#### Train/Eval Loop
+### Train/Eval Loop
 
-##### training function
+#### training function
 - Set model to training mode
 - Define criterion, optimizer, and scheduler
 - Fetch data
@@ -177,14 +177,14 @@ As example shows, a single sentence is represented by multiple batches with the 
 - Loss calculation
 - Logging (epoch number, batches, loss, ppl)
 
-##### evaluate function
+#### evaluate function
 - Set model to evaluation mode
 - No grad definition
 - Fetch data
 - Pass to model (deterministic process)
 - Total loss calculation
 
-#### Train/Eval Result & Ablation Studies
+### Train/Eval Result & Ablation Studies
 
 - `train_eval.log` shows numbers. Since train data is small, the model is close to underfitting.
 - In larger transformer layer, more underfitting occur, thus loss function gets higher
@@ -192,12 +192,12 @@ As example shows, a single sentence is represented by multiple batches with the 
 - 1layer transformer encoder for LM task
 ![train-valid-graph](./assets/train_val_graph.png)
 
-- 12layer transformer encoder for LM task (underfitting due to model capacity)
+- 12layer transformer encoder for LM task (underfitting due to large model capacity)
 ![train-valid-graph_12layer](./assets/train_val_graph_12layer.png)
 
 
 
-#### Model Option
+### Model Option
 
 A common configuration for constructing the bert model. Options include,
 > https://huggingface.co/transformers/main_classes/configuration.html#transformers.PretrainedConfig
@@ -212,8 +212,35 @@ A common configuration for constructing the bert model. Options include,
 - `attention_probs_dropout_prob` self attention layer dropout prob. for regularization
 - `max_position_embeddings` max size of positional embedding legnth
 - `type_vocab_size` max size of type vocab length (...)
-- ~`initializer_range`~
 - `layer_norm_eps` layer norm option
 - `output_attentions` option for output attention prob
 - `output_hidden_states` option for output hidden state
 
+
+## References & Resources
+
+### On Implementations
+- Transformers: State-of-the-art Natural Language Processing for Pytorch and TensorFlow 2.0.
+> https://github.com/huggingface/transformers
+- Sequence-to-Sequence Modeling with nn.Transformer and TorchText
+> https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+- transformers/modeling_bert.py at a7d46a060930242cd1de7ead8821f6eeebb0cd06 · huggingface/transformers (GitHub)
+> https://github.com/huggingface/transformers/blob/a7d46a060930242cd1de7ead8821f6eeebb0cd06/src/transformers/models/bert/modeling_bert.py
+- Configuration - transformers 3.5.0 documentation 
+> https://huggingface.co/transformers/main_classes/configuration.html#transformers.PretrainedConfig
+- The Annotated Transformer
+> https://nlp.seas.harvard.edu/2018/04/03/attention.html
+- Tensor2Tensor Intro
+> https://colab.research.google.com/github/tensorflow/tensor2tensor/blob/master/tensor2tensor/notebooks/hello_t2t.ipynb
+
+### On Concepts
+- Inductive bias - Wikipedia
+> https://en.wikipedia.org/wiki/Inductive_bias
+- Directed acyclic graph - Wikipedia 
+> https://en.wikipedia.org/wiki/Directed_acyclic_graph
+- Transfer learning and Image classification using Keras on Kaggle kernels.
+> https://towardsdatascience.com/transfer-learning-and-image-classification-using-keras-on-kaggle-kernels-c76d3b030649
+- Attention? Attention!
+> https://lilianweng.github.io/lil-log/2018/06/24/attention-attention.html#multi-head-self-attention
+- Attention Is All You Need
+> https://arxiv.org/abs/1706.03762
